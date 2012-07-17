@@ -13,7 +13,7 @@
 #import "JPNestedArrayTest.h"
 
 @implementation JTObjectMappingTests
-@synthesize json, mapping, object;
+@synthesize json, mapping, object, reverseObject;
 
 - (void)setUp
 {
@@ -110,6 +110,7 @@
                     nil];
 
     self.object = [JTUserTest objectFromJSONObject:json mapping:mapping];
+    self.reverseObject = [NSDictionary dictionaryWithPropertiesOfObject:object usingMappings:mapping];
 }
 
 - (void)tearDown
@@ -118,6 +119,7 @@
     self.json = nil;
     self.mapping = nil;
     self.object = nil;
+    self.reverseObject = nil;
 
     [super tearDown];
 }
@@ -205,6 +207,52 @@
     
     NSArray *expectedArray2 = [NSArray arrayWithObjects:@"three", @"four", nil];
     STAssertEqualObjects(api2.array, expectedArray2, nil, nil);
+}
+
+- (void)testReverseTitle {
+    STAssertTrue([[self.reverseObject objectForKey:@"p_title"] isEqual:@"Manager"], @"p_title = %@ fails to equal %@", [self.reverseObject objectForKey:@"p_title"], @"Manager");
+}
+
+- (void)testReverseName {
+    STAssertTrue([[self.reverseObject objectForKey:@"p_name"] isEqual:@"Bob"], @"p_name = %@ fails to equal %@", [self.reverseObject objectForKey:@"p_name"], @"Bob");
+}
+
+- (void)testReverseAge {
+    STAssertTrue([[self.reverseObject objectForKey:@"p_age"] isEqualToNumber:[NSNumber numberWithInt:30]], @"p_age = %@ fails to equal %@", [self.reverseObject objectForKey:@"p_age"], [NSNumber numberWithInt:30]);
+}
+
+- (void)testReverseSocialTwitter {    
+    STAssertTrue([[[self.reverseObject objectForKey:@"social_networks"] objectForKey:@"twitter"] isEqual:@"@bob"], @"twitter id = %@ fails to equal %@", [[self.reverseObject objectForKey:@"social_networks"] objectForKey:@"twitter"], @"@bob");
+}
+
+- (void)testReverseSocialFacebook {
+    STAssertTrue([[[self.reverseObject objectForKey:@"social_networks"] objectForKey:@"facebook"] isEqual:@"bob"], @"facebook username = %@ fails to equal %@", [[self.reverseObject objectForKey:@"social_networks"] objectForKey:@"facebook"], @"bob");
+}
+
+- (void)testReverseNull {
+    STAssertNil([self.reverseObject objectForKey:@"null"], @"null should be mapped to nil", nil);
+}
+
+//- (void)testReverseCreateDate {
+//    // TODO: implement
+//}
+
+- (void)testReverseChilds {
+    STAssertTrue([[self.reverseObject objectForKey:@"p_childs"] count] == 2, @"Should have two childs", nil);
+    STAssertTrue([[[self.reverseObject objectForKey:@"p_childs"] objectAtIndex:0] isEqual:@"Mary"], @"%@ != Mary", [[self.reverseObject objectForKey:@"p_childs"] objectAtIndex:0]);
+    STAssertTrue([[[self.reverseObject objectForKey:@"p_childs"] objectAtIndex:1] isEqual:@"James"], @"%@ != James", [[self.reverseObject objectForKey:@"p_childs"] objectAtIndex:1]); 
+}
+
+- (void)testReverseUsers {
+    STAssertTrue([[self.reverseObject objectForKey:@"p_users"] count] == 2, @"Should have two users", nil);
+    
+    NSDictionary *userJohn = [[self.reverseObject objectForKey:@"p_users"] objectAtIndex:0];
+    STAssertTrue([userJohn isKindOfClass:[NSDictionary class]], @"%@ != [NSDictionary class]", [userJohn class]);
+    STAssertEqualObjects([userJohn objectForKey:@"p_name"], @"John", nil, nil);
+    
+    NSDictionary *userDoe = [[self.reverseObject objectForKey:@"p_users"] objectAtIndex:1];
+    STAssertTrue([userDoe isKindOfClass:[NSDictionary class]], @"%@ != [NSDictionary class]", [userDoe class]);
+    STAssertEqualObjects([userDoe objectForKey:@"p_name"], @"Doe", nil, nil);
 }
 
 @end

@@ -127,3 +127,54 @@
 }
 
 @end
+
+
+@implementation NSDictionary (JTObjectMapping)
+
++ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)objectToMap usingMappings:(NSDictionary *)mappings {
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+    
+    [mappings enumerateKeysAndObjectsUsingBlock:^(id mapToKey, id mapFromObj, BOOL *stop) {
+        if ([mapFromObj conformsToProtocol:@protocol(JTDateMappings)]) {
+            id<JTDateMappings> dateMapping = (id<JTDateMappings>)mapFromObj;
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            [formatter setDateFormat:dateMapping.dateFormatString];
+            id rawValue = [objectToMap valueForKey:[dateMapping key]];
+            if (rawValue) {
+                NSDate *date = (NSDate *)[objectToMap valueForKey:[dateMapping key]];
+                [dictionary setValue:[formatter stringFromDate:date] forKey:mapToKey];
+            }
+            [formatter release];
+        } else if ([mapFromObj conformsToProtocol:@protocol(JTMappings)]) {
+            id<JTMappings> childMappings = (id<JTMappings>)mapFromObj;
+            id mapFromObjValue = [objectToMap valueForKeyPath:[mapFromObj key]];
+            
+            if ([mapFromObjValue isKindOfClass:[NSArray class]]) {
+                NSMutableArray *array = [NSMutableArray array];
+                [(NSArray *)mapFromObjValue enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                    NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:obj usingMappings:[childMappings mapping]];                    
+                    [array addObject:childDict];
+                }];
+                
+                [dictionary setValue:array forKey:mapToKey];
+            } else if ([mapFromObjValue isKindOfClass:[NSDictionary class]]) {
+                // TODO: implement
+            } else {
+                NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:mapFromObjValue usingMappings:[childMappings mapping]];
+                [dictionary setValue:childDict forKey:mapToKey];
+            }
+        } else if ([mapFromObj isKindOfClass:[NSString class]]) {
+            id value = [objectToMap valueForKey:(NSString *)mapFromObj];
+            if (value) {
+                [dictionary setValue:value forKey:mapToKey];
+            }
+        } else {
+            NSLog(@"could not map: %@", mapFromObj);
+        }
+        
+    }];
+    
+    return dictionary;
+}
+
+@end
