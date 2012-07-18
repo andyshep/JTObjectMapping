@@ -14,7 +14,8 @@
 
 @property (nonatomic, retain) NSDictionary *json;
 @property (nonatomic, retain) NSDictionary *mapping;
-@property (nonatomic, retain) JTUserTest    *object;
 @property (nonatomic, retain) NSDictionary *reverseObject;
+@property (nonatomic, retain) NSDateFormatter *formatter;
+@property (nonatomic, retain) JTUserTest    *object;
 
 @end

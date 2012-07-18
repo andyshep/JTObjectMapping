@@ -13,7 +13,7 @@
 #import "JPNestedArrayTest.h"
 
 @implementation JTObjectMappingTests
-@synthesize json, mapping, object, reverseObject;
+@synthesize json, mapping, object, reverseObject, formatter;
 
 - (void)setUp
 {
@@ -110,7 +110,10 @@
                     nil];
 
     self.object = [JTUserTest objectFromJSONObject:json mapping:mapping];
-    self.reverseObject = [NSDictionary dictionaryWithPropertiesOfObject:object usingMappings:mapping];
+    self.reverseObject = [NSDictionary dictionaryWithPropertiesOfObject:object mapping:mapping];
+    
+    self.formatter = [[[NSDateFormatter alloc] init] autorelease];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'hh:mm:ssZ"];
 }
 
 - (void)tearDown
@@ -120,6 +123,7 @@
     self.mapping = nil;
     self.object = nil;
     self.reverseObject = nil;
+    self.formatter = nil;
 
     [super tearDown];
 }
@@ -233,9 +237,12 @@
     STAssertNil([self.reverseObject objectForKey:@"null"], @"null should be mapped to nil", nil);
 }
 
-//- (void)testReverseCreateDate {
-//    // TODO: implement
-//}
+- (void)testReverseCreateDate {
+    NSString *createDateString = (NSString *)[self.reverseObject objectForKey:@"create_date"];
+    NSDate *createDate = [formatter dateFromString:createDateString];
+    
+    STAssertTrue([createDate isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]], @"date %@ != %@", createDate, [NSDate dateWithTimeIntervalSince1970:0]);
+}
 
 - (void)testReverseChilds {
     STAssertTrue([[self.reverseObject objectForKey:@"p_childs"] count] == 2, @"Should have two childs", nil);

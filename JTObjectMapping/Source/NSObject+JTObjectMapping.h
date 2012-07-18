@@ -39,6 +39,6 @@
 
 @interface NSDictionary (JTObjectMapping)
 
-+ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)objectToMap usingMappings:(NSDictionary *)mappings;
++ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)object mapping:(NSDictionary *)mapping;
 
 @end

@@ -131,45 +131,43 @@
 
 @implementation NSDictionary (JTObjectMapping)
 
-+ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)objectToMap usingMappings:(NSDictionary *)mappings {
++ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)object mapping:(NSDictionary *)mapping {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     
-    [mappings enumerateKeysAndObjectsUsingBlock:^(id mapToKey, id mapFromObj, BOOL *stop) {
-        if ([mapFromObj conformsToProtocol:@protocol(JTDateMappings)]) {
-            id<JTDateMappings> dateMapping = (id<JTDateMappings>)mapFromObj;
+    [mapping enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        if ([obj conformsToProtocol:@protocol(JTDateMappings)]) {
+            id<JTDateMappings> dateMapping = (id<JTDateMappings>)obj;
             NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
             [formatter setDateFormat:dateMapping.dateFormatString];
-            id rawValue = [objectToMap valueForKey:[dateMapping key]];
+            [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+            id rawValue = [object valueForKey:[dateMapping key]];
             if (rawValue) {
-                NSDate *date = (NSDate *)[objectToMap valueForKey:[dateMapping key]];
-                [dictionary setValue:[formatter stringFromDate:date] forKey:mapToKey];
+                NSDate *date = (NSDate *)[object valueForKey:[dateMapping key]];
+                [dictionary setValue:[formatter stringFromDate:date] forKey:key];
             }
             [formatter release];
-        } else if ([mapFromObj conformsToProtocol:@protocol(JTMappings)]) {
-            id<JTMappings> childMappings = (id<JTMappings>)mapFromObj;
-            id mapFromObjValue = [objectToMap valueForKeyPath:[mapFromObj key]];
-            
+        } else if ([obj conformsToProtocol:@protocol(JTMappings)]) {
+            id<JTMappings> childMapping = (id<JTMappings>)obj;
+            id mapFromObjValue = [object valueForKeyPath:[obj key]];
             if ([mapFromObjValue isKindOfClass:[NSArray class]]) {
                 NSMutableArray *array = [NSMutableArray array];
                 [(NSArray *)mapFromObjValue enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-                    NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:obj usingMappings:[childMappings mapping]];                    
+                    NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:obj mapping:[childMapping mapping]];                    
                     [array addObject:childDict];
                 }];
-                
-                [dictionary setValue:array forKey:mapToKey];
-            } else if ([mapFromObjValue isKindOfClass:[NSDictionary class]]) {
-                // TODO: implement
+                [dictionary setValue:array forKey:key];
             } else {
-                NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:mapFromObjValue usingMappings:[childMappings mapping]];
-                [dictionary setValue:childDict forKey:mapToKey];
+                NSDictionary *childDict = [NSDictionary dictionaryWithPropertiesOfObject:mapFromObjValue mapping:[childMapping mapping]];
+                [dictionary setValue:childDict forKey:key];
             }
-        } else if ([mapFromObj isKindOfClass:[NSString class]]) {
-            id value = [objectToMap valueForKey:(NSString *)mapFromObj];
+        } else if ([obj isKindOfClass:[NSString class]]) {
+            id value = [object valueForKey:(NSString *)obj];
             if (value) {
-                [dictionary setValue:value forKey:mapToKey];
+                [dictionary setValue:value forKey:key];
             }
         } else {
-            NSLog(@"could not map: %@", mapFromObj);
+            id value = [object valueForKey:(NSString *)obj];
+            NSAssert2(NO, @"[value class]: %@, [obj class]: %@ is not handled", NSStringFromClass([value class]), NSStringFromClass([obj class]));
         }
         
     }];
