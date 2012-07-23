@@ -59,8 +59,14 @@
                 } else if ([mapsToValue conformsToProtocol:@protocol(JTDateMappings)] && [(NSObject *)obj isKindOfClass:[NSString class]]) {
                     id <JTDateMappings> mappings = (id <JTDateMappings>)mapsToValue;
                     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-                    [formatter setDateFormat:mappings.dateFormatString];
-                    NSDate *date = [formatter dateFromString:obj];
+                    NSDate *date = nil;
+                    for (NSString *dateFormatString in [mappings dateFormatStrings]) {
+                        [formatter setDateFormat:dateFormatString];
+                        date = [formatter dateFromString:obj];
+                        if (date != nil) {
+                            break;
+                        }
+                    }
                     [formatter release];
                     [self setValue:date forKey:mappings.key];
                 } else if ([(NSObject *)obj isKindOfClass:[NSArray class]]) {
@@ -130,6 +136,10 @@
 
 + (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatString:(NSString *)dateFormatString {
     return [JTDateMappings mappingWithKey:key dateFormatString:dateFormatString];
+}
+
++ (id<JTDateMappings>)mappingWithKey:(NSString *)key dateFormatStrings:(NSArray *)dateFormatStrings {
+    return [JTDateMappings mappingWithKey:key dateFormatStrings:dateFormatStrings];
 }
 
 @end
