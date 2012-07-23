@@ -9,17 +9,21 @@
 #import "JTDateMappings.h"
 
 @implementation JTDateMappings
-@synthesize dateFormatString, key;
+@synthesize dateFormatStrings, key;
 
 + (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatString:(NSString *)dateFormatString {
+    return [self mappingWithKey:key dateFormatStrings:[NSArray arrayWithObject:dateFormatString]];
+}
+
++ (id<JTDateMappings>)mappingWithKey:(NSString *)key dateFormatStrings:(NSArray *)dateFormatStrings {
     JTDateMappings *dateMappings = [[JTDateMappings alloc] init];
-    dateMappings.dateFormatString = dateFormatString;
-    dateMappings.key              = key;
+    dateMappings.dateFormatStrings = dateFormatStrings;
+    dateMappings.key = key;
     return [dateMappings autorelease];
 }
 
 - (void)dealloc {
-    self.dateFormatString = nil;
+    self.dateFormatStrings = nil;
     self.key = nil;
     [super dealloc];
 }

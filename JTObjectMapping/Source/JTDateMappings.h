@@ -11,7 +11,7 @@
 @protocol JTDateMappings <NSObject>
 
 - (NSString *)key;
-- (NSString *)dateFormatString;
+- (NSArray *)dateFormatStrings;
 
 @end
 
@@ -19,8 +19,9 @@
 @interface JTDateMappings : NSObject <JTDateMappings>
 
 @property (nonatomic, copy) NSString *key;
-@property (nonatomic, copy) NSString *dateFormatString;
+@property (nonatomic, copy) NSArray *dateFormatStrings;
 
 + (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatString:(NSString *)dateFormatString;
++ (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatStrings:(NSArray *)dateFormatStrings;
 
 @end

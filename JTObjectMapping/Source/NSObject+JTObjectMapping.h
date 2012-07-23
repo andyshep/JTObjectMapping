@@ -33,5 +33,6 @@
 @interface NSDate (JTObjectMapping)
 
 + (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatString:(NSString *)dateFormatString;
++ (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatStrings:(NSArray *)dateFormatStrings;
 
 @end
