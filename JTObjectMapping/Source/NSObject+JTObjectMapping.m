@@ -153,14 +153,21 @@
     [mapping enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
         if ([obj conformsToProtocol:@protocol(JTDateMappings)]) {
             id<JTDateMappings> dateMapping = (id<JTDateMappings>)obj;
+            NSString *dateString = nil;
             NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-            [formatter setDateFormat:dateMapping.dateFormatString];
-            [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-            id rawValue = [object valueForKey:[dateMapping key]];
-            if (rawValue) {
-                NSDate *date = (NSDate *)[object valueForKey:[dateMapping key]];
-                [dictionary setValue:[formatter stringFromDate:date] forKey:key];
+            for (NSString *dateFormatString in [dateMapping dateFormatStrings]) {
+                [formatter setDateFormat:dateFormatString];
+                [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+                id rawValue = [object valueForKey:[dateMapping key]];
+                if (rawValue) {
+                    NSDate *date = (NSDate *)[object valueForKey:[dateMapping key]];
+                    dateString = [formatter stringFromDate:date];
+                    if (dateString != nil) {
+                        break;
+                    }
+                }
             }
+            [dictionary setValue:dateString forKey:key];
             [formatter release];
         } else if ([obj conformsToProtocol:@protocol(JTMappings)]) {
             id<JTMappings> childMapping = (id<JTMappings>)obj;
