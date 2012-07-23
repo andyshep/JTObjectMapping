@@ -36,3 +36,10 @@
 + (id <JTDateMappings>)mappingWithKey:(NSString *)key dateFormatStrings:(NSArray *)dateFormatStrings;
 
 @end
+
+
+@interface NSDictionary (JTObjectMapping)
+
++ (NSDictionary *)dictionaryWithPropertiesOfObject:(id)object mapping:(NSDictionary *)mapping;
+
+@end

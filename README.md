@@ -78,6 +78,21 @@ Of course you need to define your own User object with corresponding @synthesize
     
     @end
 
+If you need to convert an NSObject back into an NSDictionary then use **[NSDictionary dictionaryWithPropertiesOfObject:object mapping:mapping]**.
+
+    ...
+    JTTestUser *user = <Instaniated user object>;
+    NSDictionary *mappings = <A dictionary for key/value pairs to use when mapping object properties>;
+
+    //
+    // Use +[NSDictionary dictionaryWithPropertiesOfObject:mapping:] to convert 
+    // from an NSObject back into an NSDictionary
+    //
+    NSDictionary *dictionary = [NSDictionary dictionaryWithPropertiesOfObject:user mapping:mapping];
+    ...
+    
+You can reuse the mapping original mapping dictionary for converting from JSON to an NSObject or define new mappings.
+
 For more detailed usage, see **JTObjectMappingTests.m**, will be adding more detailed description soon.
 
 Update Logs
