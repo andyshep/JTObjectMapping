@@ -50,7 +50,7 @@ Define necessary mappings, from a dictionary key to a property keyPath.
                     @"age", @"p_age",
                     @"childs", @"p_childs",                    
                     [NSDate mappingWithKey:@"createDate"
-                          dateFormatString:@"yyyy-MM-dd'T'hh:mm:ssZ"], @"create_date",
+                          dateFormatString:@"yyyy-MM-dd'T'HH:mm:ssZ"], @"create_date",
                     nil];
 
 
@@ -98,6 +98,12 @@ For more detailed usage, see **JTObjectMappingTests.m**, will be adding more det
 Update Logs
 -----------
 
+v1.0.7
+- Added JTSetMapping and JTDateEpochMappings, thanks to [@zcharter][] for making this happen!
+
+v1.0.6
+- Added experimental keypath support. use `#define JTOBJECTMAPPING_DISABLE_KEYPATH_SUPPORT = 1` to disable it.
+
 v1.0.5  
 - Fixed nested array causing crash
 
@@ -116,4 +122,6 @@ v1.0.1
 
 
 [CocoaPods]:https://github.com/CocoaPods/CocoaPods
+[@zcharter]:https://github.com/zcharter
+
 

@@ -12,6 +12,13 @@
 #import "JTSocialNetworkTest.h"
 #import "JPNestedArrayTest.h"
 
+#define EIGHTEEN_YEARS_IN_SECONDS 567993600
+
+// when the unicode string is mapped with lossy ASCII the elipses character (0x2026) will convert to three periods
+#define DATA_STRING_UNICODE @"elipses are unicode characters…periods are not"
+#define DATA_STRING_ASCII   @"elipses are unicode characters...periods are not"
+
+
 @implementation JTObjectMappingTests
 @synthesize json, mapping, object, reverseObject, formatter;
 
@@ -37,10 +44,24 @@
                   [NSDictionary dictionaryWithObjectsAndKeys:
                    @"Doe", @"p_name", nil],
                   nil], @"p_users",
+                 
+                 // This turns into an NSSet
+                 [[NSSet setWithObjects:@"blue", @"green", nil] allObjects], @"favorite_colors",
+                 
+                 // Setup hash for testing keypath
+                 [NSDictionary dictionaryWithObject:@"string" forKey:@"string"], @"hashed",
 
-                 @"1970-01-01T00:00:00+0000", @"create_date",
+                 @"1970-01-01T13:00:00+0000", @"create_date",
                  
+                 // eighteenth birthday in seconds since the epoch
+                 [NSNumber numberWithInt:EIGHTEEN_YEARS_IN_SECONDS], @"eighteenth_birthday",
                  
+                 // NSData -- the mapping below will specify lossless utf8
+                 DATA_STRING_UNICODE, @"data",
+                 // NSData -- the mapping below will specify lossy ascii
+                 DATA_STRING_UNICODE, @"dataLossy",
+                 
+                 // auto string
                  @"yes", @"autoString",
                  [NSArray arrayWithObjects:
                   @"Object1",
@@ -70,6 +91,7 @@
                  [NSNull null], @"null_date",
                  [NSNull null], @"null_child",
                  [NSNull null], @"null_array",
+                 [NSNull null], @"null_set",
                  [NSNull null], @"null_number",
 
                  nil];
@@ -79,8 +101,13 @@
                                           @"facebookID", @"facebook",
                                           nil];
     
-    NSString *dateFormat = @"yyyy-MM-dd'T'hh:mm:ssZ";
+    NSString *dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZ";
     
+    // Define the mapping between JSON dictionary-keys to the object properties.
+    // Note how basic foundation types (NSString, NSDictionary, NSArray, NSSet, NSNumber)
+    // are automatically mapped if the json key is the same as the property name.
+    // You need to specify a mapping (as below) if the json key and objC property name are different,
+    // or if you want to map to a custom object (see the JTUserTest mapping below)
     self.mapping = [NSDictionary dictionaryWithObjectsAndKeys:
                     @"name", @"p_name",
                     @"title", @"p_title",
@@ -90,8 +117,26 @@
                                        mapping:[NSDictionary dictionaryWithObjectsAndKeys:
                                                 @"name", @"p_name",
                                                 nil]], @"p_users",
+                    // NSSet mapping
+                    [NSSet mappingWithKey:@"favoriteColors"], @"favorite_colors",
+                    
+                    // NSSet keypath
+                    @"hashedString", @"hashed.string",
+                    
+                    // NSDate mapping -- by format or since the epoch
                     [NSDate mappingWithKey:@"createDate"
                           dateFormatString:dateFormat], @"create_date",
+                    // NSDate mapping with seconds since the epoch (1==seconds, 1000==milliseconds)
+                    [NSDate mappingWithKey:@"eighteenthBirthday"
+                         divisorForSeconds:1], @"eighteenth_birthday",
+                    
+                    // NSData mapping
+                    [NSData mappingWithKey:@"data" usingEncoding:NSUTF8StringEncoding], @"data",
+                    // NSData mapping (lossy ascii)
+                    [NSData mappingWithKey:@"dataLossy" usingEncoding:NSASCIIStringEncoding allowLossy:YES], @"dataLossy",
+                    
+                    // This specifies a mapping a child object (JTSocialNetwork) and a child dictionary in the json dictionary
+                    // (it too uses a map of json keys to its properties, the `socialNetworkMapping` dictionary)
                     [JTSocialNetworkTest mappingWithKey:@"socialNetwork"
                                                 mapping:socialNetworkMapping], @"social_networks",
                     
@@ -105,8 +150,12 @@
                     [JTSocialNetworkTest mappingWithKey:@"nullChild"
                                                 mapping:socialNetworkMapping], @"null_child",
                     @"nullArray", @"null_array",
+                    @"nullSet", @"null_set",
                     @"nullNumber", @"null_number",
-
+                    // missing auto-mapping -- this key doesn't exist in the json, which is fine
+                    @"missingString", @"missingString",
+                    // missing class-mapping -- this key doesn't exist in the json, which is fine
+                    [NSDate mappingWithKey:@"missingDate" divisorForSeconds:1], @"missingDate",
                     nil];
 
     self.object = [JTUserTest objectFromJSONObject:json mapping:mapping];
@@ -132,6 +181,7 @@
 //    NSLog(@"%@", self.json);
 //}
 
+
 - (void)testTitle {
     STAssertTrue([self.object.title isEqual:@"Manager"], @"title = %@ fails to equal %@", self.object.title, @"Manager");
 }
@@ -156,12 +206,28 @@
     STAssertNil(self.object.null, @"null should be mapped to nil", nil);
     STAssertNil(self.object.nullDate, @"nullDate should be mapped to nil", nil);
     STAssertNil(self.object.nullArray, @"nullArray should be mapped to nil", nil);
+    STAssertNil(self.object.nullSet, @"nullSet should be mapped to nil", nil);
     STAssertNil(self.object.nullChild, @"nullChild should be mapped to nil", nil);
     STAssertNil(self.object.nullNumber, @"nullNumber should be mapped to nil", nil);
 }
 
 - (void)testCreateDate {
-    STAssertTrue([self.object.createDate isEqual:[NSDate dateWithTimeIntervalSince1970:0]], @"date %@ != %@", self.object.createDate, [NSDate dateWithTimeIntervalSince1970:0]);
+    STAssertTrue([self.object.createDate isEqual:[NSDate dateWithTimeIntervalSince1970:46800]], @"date %@ != %@", self.object.createDate, [NSDate dateWithTimeIntervalSince1970:46800]);
+}
+
+// Test date with seconds since Epoch
+- (void)testEpochDate {
+    NSDate *date18 = [NSDate dateWithTimeIntervalSince1970:EIGHTEEN_YEARS_IN_SECONDS];
+    STAssertTrue([self.object.eighteenthBirthday isEqual:date18], @"date %@ != %@", self.object.eighteenthBirthday, date18);
+}
+
+- (void)testData {
+    // test lossless data -- will still contain the elipses (0x2026) character
+    NSString *notLossy = [[NSString alloc] initWithData:self.object.data encoding:NSUTF8StringEncoding];
+    STAssertTrue([DATA_STRING_UNICODE isEqualToString:notLossy], @"data string didn't convert");
+    // test lossy conversion to ascii -- the elipses will convert to three periods
+    NSString *lossy = [[NSString alloc] initWithData:self.object.dataLossy encoding:NSASCIIStringEncoding];
+    STAssertTrue([DATA_STRING_ASCII isEqualToString:lossy], @"data string didn't convert");
 }
 
 - (void)testChilds {
@@ -181,6 +247,23 @@
     STAssertTrue([userDoe isKindOfClass:[JTUserTest class]], @"%@ != [JTUserTest class]", [userDoe class]);
     STAssertEqualObjects(userDoe.name, @"Doe", nil, nil);
 }
+
+- (void)testSet {
+    NSSet *colors = self.object.favoriteColors;
+    STAssertTrue([colors isKindOfClass:[NSSet class]], @"%@ != [NSSet class]", [colors class]);
+    STAssertTrue([colors containsObject:@"green"], @"%@ should contain 'green'", colors);
+    STAssertTrue([colors containsObject:@"blue"], @"%@ should contain 'blue'", colors);
+}
+
+- (void)testKeyPath {
+    STAssertEqualObjects(self.object.hashedString, @"string", nil, nil);
+}
+
+- (void)testMissingJSON {
+    STAssertNil(self.object.missingString, @"missingString should be nil");
+    STAssertNil(self.object.missingDate, @"missingDate should be nil");
+}
+
 
 //- (void)testAutoMapping {
 //    STAssertEqualObjects(self.object.autoString, @"yes", nil, nil);
