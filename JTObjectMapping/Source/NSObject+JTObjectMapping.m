@@ -35,7 +35,7 @@
         if (mapsToValue != nil) {
             if ([obj isKindOfClass:[NSNull class]]) {
                 if ([mapsToValue conformsToProtocol:@protocol(JTMappings)] || [mapsToValue conformsToProtocol:@protocol(JTDateMappings)]) {
-                    [self setValue:nil forKey:[mapsToValue key]];
+                    [self setValue:nil forKey:[(id<JTMappings>)mapsToValue key]];
                 } else if ([mapsToValue isKindOfClass:[NSString class]]) {
                     [self setValue:nil forKey:mapsToValue];
                 } else {
@@ -214,7 +214,7 @@
             [formatter release];
         } else if ([obj conformsToProtocol:@protocol(JTMappings)]) {
             id<JTMappings> childMapping = (id<JTMappings>)obj;
-            id mapFromObjValue = [object valueForKeyPath:[obj key]];
+            id mapFromObjValue = [object valueForKeyPath:[childMapping key]];
             if ([mapFromObjValue isKindOfClass:[NSArray class]]) {
                 NSMutableArray *array = [NSMutableArray array];
                 [(NSArray *)mapFromObjValue enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
